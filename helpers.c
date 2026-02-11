@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "fractol.h"
-
 int	ft_strcmp(const char *s1, const char *s2)
 {
 	size_t	i;
@@ -24,61 +23,61 @@ int	ft_strcmp(const char *s1, const char *s2)
 
 int	get_color(int iter)
 {
-	int	intensity;
+	double	t;
+	int		r;
+	int		g;
+	int		b;
 
 	if (iter == MAX_ITER)
 		return (0x000000);
-	intensity = (int)(255.0 * iter / MAX_ITER);
-	return ((intensity << 16) | (0 << 8) | intensity);
-}
-
-static int	get_sign(const char *str, int *i)
-{
-	int	sign;
-
-	sign = 1;
-	if (str[*i] == '-' || str[*i] == '+')
-	{
-		if (str[*i] == '-')
-			sign = -1;
-		(*i)++;
-	}
-	return (sign);
+	
+	t = (double)iter / (double)MAX_ITER;
+	t = t * 6.0;
+	
+	if (t < 1.0) 
+		r = 0, g = (int)(255 * t), b = 255;
+	else if (t < 2.0) 
+		r = 0, g = 255, b = (int)(255 * (2.0 - t));
+	else if (t < 3.0)
+		r = (int)(255 * (t - 2.0)), g = 255, b = 0;
+	else if (t < 4.0)
+		r = 255, g = (int)(255 * (4.0 - t)), b = 0;
+	else if (t < 5.0)
+		r = 255, g = 0, b = (int)(255 * (t - 4.0));
+	else
+		r = (int)(255 * (6.0 - t)), g = 0, b = 255;
+	return ((r << 16) | (g << 8) | b);
 }
 
 double	ft_atof(const char *s)
 {
-	double	result;
-	double	divider;
-	int		i;
-	int		sign;
+	double	res = 0.0;
+	double	pow = 1.0;
+	int		sign = 1;
 
-	result = 0.0;
-	divider = 10.0;
-	i = 0;
-	sign = get_sign(s, &i);
-	while (s[i] >= '0' && s[i] <= '9')
+	while (*s == ' ' || (*s >= 9 && *s <= 13))
+		s++;
+	if (*s == '-' || *s == '+')
+		if (*s++ == '-')
+			sign = -1;
+	while (*s >= '0' && *s <= '9')
+		res = res * 10.0 + (*s++ - '0');
+	if (*s == '.')
 	{
-		result = result * 10 + (s[i] - '0');
-		i++;
+		while (*++s >= '0' && *s <= '9')
+		{
+			res = res * 10.0 + (*s - '0');
+			pow *= 10.0;
+		}
 	}
-	if (s[i] == '.')
-		i++;
-	while (s[i] >= '0' && s[i] <= '9')
-	{
-		result += (s[i] - '0') / divider;
-		divider *= 10.0;
-		i++;
-	}
-	return (result * sign);
+	return (sign * res / pow);
 }
 
-
-void print_usage(void)
+void	print_usage(void)
 {
-    write(1, "Usage:\n", 7);
-    write(1, "  ./fractol mandelbrot\n", 24);
-    write(1, "  ./fractol julia <real> <imag>\n", 33);
-    exit(1);
+	write(1, "Usage:\n", 7);
+	write(1, "  ./fractol mandelbrot\n", 24);
+	write(1, "  ./fractol julia <real> <imag>\n", 33);
+	write(1, "  ./fractol leaf\n", 17);
+	exit(1);
 }
-

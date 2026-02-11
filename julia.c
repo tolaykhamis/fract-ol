@@ -12,18 +12,19 @@
 
 #include "fractol.h"
 
-int	julia(double zr, double zi, double cr, double ci)
+int	julia(double zr, double zi, t_all *all)
 {
-	int		i;
+	int		iter;
 	double	tmp;
 
-	i = 0;
-	while (zr * zr + zi * zi <= 4.0 && i < MAX_ITER)
+	iter = 0;
+	while (zr * zr + zi * zi <= 4 && iter < all->iter)
 	{
-		tmp = zr * zr - zi * zi + cr;
-		zi = 2 * zr * zi + ci;
+		tmp = zr * zr - zi * zi + all->julia_re;
+		zi = 2 * zr * zi + all->julia_im;
 		zr = tmp;
-		i++;
+		iter++;
 	}
-	return (i);
+	return (iter);
 }
+

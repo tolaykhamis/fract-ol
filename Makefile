@@ -15,16 +15,28 @@ NAME = fractol
 CC = cc
 CFLAGS = -Wall -Wextra -Werror
 
-SRCS = main.c hook.c render.c helpers.c mandelbrot.c julia.c
+SRCS = \
+	main.c \
+	hook.c \
+	render.c \
+	helpers.c \
+	mandelbrot.c \
+	julia.c \
+	leaf.c
+
 OBJS = $(SRCS:.c=.o)
 
 MLX_DIR = minilibx-linux
-MLX = $(MLX_DIR)/libmlx.a -lXext -lX11 -lm
+MLX_LIB = $(MLX_DIR)/libmlx.a
+MLX_FLAGS = -L$(MLX_DIR) -lmlx -lXext -lX11 -lm
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(MLX) -o $(NAME)
+$(NAME): $(OBJS) $(MLX_LIB)
+	$(CC) $(CFLAGS) $(OBJS) $(MLX_FLAGS) -o $(NAME)
+
+$(MLX_LIB):
+	make -C $(MLX_DIR)
 
 %.o: %.c fractol.h
 	$(CC) $(CFLAGS) -I$(MLX_DIR) -c $< -o $@

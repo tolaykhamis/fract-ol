@@ -20,35 +20,46 @@ void	init_view(t_view *v)
 	v->max_im = 1.5;
 }
 
-void pixel_to_complex(int x, int y, t_view *v, double *cr, double *ci, t_all *all)
+void	init_window(t_all *all)
 {
-    double re_step = (v->max_re - v->min_re) / WIDTH / all->zoom;
-    double im_step = (v->max_im - v->min_im) / HEIGHT / all->zoom;
-
-    *cr = v->min_re + (x * re_step) + all->x_offset;
-    *ci = v->max_im - (y * im_step) + all->y_offset;
+	all->mlx = mlx_init();
+	if (!all->mlx)
+		exit(1);
+	all->win = mlx_new_window(all->mlx, WIDTH, HEIGHT, "Fractol");
+	if (!all->win)
+		exit(1);
 }
 
-
-void	mouse_to_complex(int x, int y, t_view *v, double *cr, double *ci)
+void	pixel_to_complex(int x, int y, t_all *all, t_pix *p)
 {
 	double	re_step;
 	double	im_step;
+	t_view	*v;
 
-	re_step = (v->max_re - v->min_re) / WIDTH;
-	im_step = (v->max_im - v->min_im) / HEIGHT;
-	*cr = v->min_re + x * re_step;
-	*ci = v->max_im - y * im_step;
+	v = &all->view;
+	re_step = (v->max_re - v->min_re) / (WIDTH * all->zoom);
+	im_step = (v->max_im - v->min_im) / (HEIGHT * all->zoom);
+	p->cr = v->min_re + (x * re_step) + all->x_offset;
+	p->ci = v->max_im - (y * im_step) + all->y_offset;
 }
 
-void	draw_fractal(t_all *all)
+void	mouse_to_complex(int x, int y, t_all *all, t_pix *p)
 {
-	int		x;
-	int		y;
-	double	cr;
-	double	ci;
-	int		iter;
-	int		color;
+	double	re_step;
+	double	im_step;
+	t_view	*v;
+
+	v = &all->view;
+	re_step = (v->max_re - v->min_re) / WIDTH;
+	im_step = (v->max_im - v->min_im) / HEIGHT;
+	p->cr = v->min_re + x * re_step;
+	p->ci = v->max_im - y * im_step;
+}
+
+static void	clear_image(t_all *all)
+{
+	int	x;
+	int	y;
 
 	y = 0;
 	while (y < HEIGHT)
@@ -56,15 +67,43 @@ void	draw_fractal(t_all *all)
 		x = 0;
 		while (x < WIDTH)
 		{
-			pixel_to_complex(x, y, &all->view, &cr, &ci, all);
-			if (all->type == 1)
-				iter = mandelbrot(cr, ci);
-			else
-				iter = julia(cr, ci, all->julia_re, all->julia_im);
-			color = get_color(iter);
-			my_mlx_pixel_put(&all->img, x, y, color);
+			my_mlx_pixel_put(&all->img, x, y, 0x000000);
 			x++;
 		}
 		y++;
+	}
+}
+
+void	draw_fractal(t_all *all)
+{
+	t_pix	p;
+
+	clear_image(all);
+	if (all->type == LEAF)
+	{
+		draw_tree(all);
+		return ;
+	}
+	p.y = 0;
+	while (p.y < HEIGHT)
+	{
+		p.x = 0;
+		while (p.x < WIDTH)
+		{
+			pixel_to_complex(p.x, p.y, all, &p);
+			if (all->type == MANDELBROT)
+			{
+				p.iter = mandelbrot(p.cr, p.ci);
+				p.color = get_color(p.iter);
+			}
+			else if (all->type == JULIA)
+			{
+				p.iter = julia(p.cr, p.ci, all);
+				p.color = get_color(p.iter);
+			}
+			my_mlx_pixel_put(&all->img, p.x, p.y, p.color);
+			p.x++;
+		}
+		p.y++;
 	}
 }
